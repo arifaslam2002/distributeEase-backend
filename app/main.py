@@ -8,14 +8,14 @@ from routers.shop_router import router as shop_router
 
 app = FastAPI(title="distributeEase")
 create_tables()
-app.add_middleware(CORSMiddleware,
-    allow_origins=[
+app.add_middleware(
+    CORSMiddleware,
+     allow_origins=[
         "http://localhost:5173",
         "https://distri-ease.vercel.app",  # ← your vercel URL
-    ],
+    ],  # React dev server
     allow_methods=["*"],
     allow_headers=["*"],
-    allow_credentials=True,
 )
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(shop_router, prefix="/shops", tags=["Shops"])

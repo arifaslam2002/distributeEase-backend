@@ -164,28 +164,32 @@ def get_order_by_shop_id(
         raise HTTPException(status_code=404, detail="No orders found for this shop")
 
     result = []
+
     for order in orders:
         items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
+
         products = []
         for item in items:
             product = db.query(Product).filter(Product.id == item.product_id).first()
+
             products.append({
-                "product_id"  : item.product_id,
+                "product_id": item.product_id,
                 "product_name": product.name if product else "Unknown",
-                "quantity"    : item.quantity,
-                "amount"      : item.Amount,
+                "quantity": item.quantity,
+                "amount": item.Amount,
             })
 
         result.append({
-            "order_id"   : order.id,
-            "order_date" : order.order_date,
+            "order_id": order.id,
+            "order_date": order.order_date,
             "grand_total": order.Grand_total,
-            "products"   : products,
+            "products": products,
         })
 
-    return {"shop_name": shop.shop_name, "orders": result}
-
-
+    return {
+        "shop_name": shop.shop_name,
+        "orders": result
+    }
 @router.get("/date/{order_date}")
 def get_orders_by_date(
     order_date: date,
