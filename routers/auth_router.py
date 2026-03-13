@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
 router = APIRouter()
 @router.post("/register")
-def register(user:UserCreate,db:Session = Depends(get_db)):
-    # ,current_user = Depends(require_roles(["admin"]))
+def register(user:UserCreate,db:Session = Depends(get_db),current_user = Depends(require_roles(["admin"]))):
+    
     existing = db.query(User).filter(User.email == user.email).first()
     if existing:
         raise HTTPException(status_code=400,detail="Email already registered")
