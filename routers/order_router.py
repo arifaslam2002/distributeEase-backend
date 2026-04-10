@@ -286,6 +286,7 @@ def update_order_by_id(
     db.commit()
     db.refresh(order)
 
+    # ── build products list ──
     all_items = db.query(OrderItem).filter(OrderItem.order_id == order_id).all()
     products = []
     for i in all_items:
@@ -297,14 +298,33 @@ def update_order_by_id(
             "amount"      : i.Amount,
         })
 
-        return {
-                  "id"       : order.id,   # ← add this
-                  "order_id"  : order.id,
-                  "order_date": order.order_date,
-                  "Grand_total": order.Grand_total,
-                  "products"  : products,
-                 }
+    # ── Telegram notification ──
+    shop = db.query(Shop).filter(Shop.id == order.shop_id).first()
+    product_lines = "".join(
+        f"  • {p['product_name']} × {p['quantity']} = ₹{p['amount']}\n"
+        for p in products
+    )
+    try:
+        send_telegram(f"""
+✏️ Order Updated!
+🏪 Shop      : {shop.shop_name if shop else 'Unknown'}
+👤 Updated by: {current_user['name']}
+📦 Products  :
+{product_lines}
+💰 New Total : ₹{order.Grand_total}
+🔢 Order ID  : #{order.id}
+        """)
+    except Exception:
+        pass
 
+    # ── return — outside the for loop ✅ ──
+    return {
+        "id"        : order.id,
+        "order_id"  : order.id,
+        "order_date": order.order_date,
+        "Grand_total": order.Grand_total,
+        "products"  : products,
+    }
 
 @router.delete("/orders/{order_id}")
 def delete_order(
