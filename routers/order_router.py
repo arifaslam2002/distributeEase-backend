@@ -1,5 +1,6 @@
 from datetime import date, datetime
 
+from models.user import User
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -96,25 +97,29 @@ def get_orders(
     db: Session = Depends(get_db),
     current_user=Depends(require_roles(["admin", "salesman", "packing"])),
 ):
-    if current_user["role"] in ["admin", "packing"]:
-        orders = db.query(Order).all()
+    if current_user["role"] == "admin":
+        orders = db.query(Order).order_by(Order.order_date.desc()).all()
     else:
-        orders = db.query(Order).filter(Order.salesman_id == int(current_user["id"])).all()
+        # salesman and packing see only their own orders
+        orders = db.query(Order).filter(
+            Order.salesman_id == int(current_user["id"])
+        ).order_by(Order.order_date.desc()).all()
 
     result = []
     for order in orders:
-        shop = db.query(Shop).filter(Shop.id == order.shop_id).first()
+        shop     = db.query(Shop).filter(Shop.id == order.shop_id).first()
+        salesman = db.query(User).filter(User.id == order.salesman_id).first()
         result.append({
-            "id"         : order.id,
-            "shop_id"    : order.shop_id,
-            "shop_name"  : shop.shop_name if shop else None,
-            "salesman_id": order.salesman_id,
-            "Grand_total": order.Grand_total,
-            "order_date" : order.order_date,
+            "id"           : order.id,
+            "shop_id"      : order.shop_id,
+            "shop_name"    : shop.shop_name if shop else None,
+            "salesman_id"  : order.salesman_id,
+            "salesman_name": salesman.name if salesman else "Unknown",
+            "Grand_total"  : order.Grand_total,
+            "order_date"   : order.order_date,
         })
 
     return result
-
 
 @router.get("/order/{order_id}")
 def get_order_by_id(
