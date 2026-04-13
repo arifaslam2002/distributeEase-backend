@@ -10,7 +10,12 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("Db_url")
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"sslmode": "require"},
+    pool_pre_ping=True,
+    pool_recycle=300,
+)
 
 SessionLocal = sessionmaker(bind=engine)  # factory, not a session itself
 
