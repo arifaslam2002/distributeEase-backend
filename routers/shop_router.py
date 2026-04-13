@@ -29,12 +29,8 @@ def get_shops(
     db: Session = Depends(get_db),
     current_user=Depends(require_roles(["admin", "salesman"])),
 ):
-    if current_user["role"] == "admin":
-        shops = db.query(Shop).all()
-    else:
-        shops = db.query(Shop).filter(
-            Shop.salesman_id == int(current_user["id"])
-        ).all()
+    # ✅ all roles see all shops
+    shops = db.query(Shop).all()
 
     return [
         {
